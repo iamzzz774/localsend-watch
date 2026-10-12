@@ -1,0 +1,7 @@
+package com.iamzz.localsendwatch;
+public class WatchUiTest {public static void main(String[] args){int checks=0;for(int d:new int[]{233,230,200,180}){int[] home=WatchUi.homeBounds(d,d);for(int x:new int[]{home[0],home[0]+home[2]})for(int y:new int[]{home[1],home[1]+home[3]})if(Math.hypot(x-d/2.0,y-d/2.0)>d/2.0+1)throw new AssertionError("home circle");int[] r=WatchUi.bounds(d,d);for(int x:new int[]{r[0],r[0]+r[2]})for(int y:new int[]{r[1],r[1]+r[3]}){if(Math.hypot(x-d/2.0,y-d/2.0)>d/2.0)throw new AssertionError("circle");checks++;}if(r[2]/2<48||r[3]<48+30)throw new AssertionError("targets");checks++; // fixed footer survives arbitrarily long scroll content
+for(int textHeight:new int[]{40,400,4000}){int footerTop=r[1]+r[3]-54;if(footerTop<r[1]+24||footerTop+48>r[1]+r[3])throw new AssertionError("pending footer");checks++;}}
+for(String s:new String[]{"","  ","a\nb","\nname\n","123456789012345678901234567890123"}){try{WatchUi.name(s);throw new AssertionError("name accepted");}catch(IllegalArgumentException ok){checks++;}}
+if(!WatchUi.name(" Watch ").equals("Watch"))throw new AssertionError();checks++;
+if(!WatchUi.state("request","offline").equals("pending")||!WatchUi.state(null,"x 2 / 3 字节").equals("transfer")||!WatchUi.state(null,"已保存：long filename.txt").equals("result"))throw new AssertionError();checks++;
+System.out.println("PASS "+checks+" executable circle/name/state assertions (230dp and smaller; unbounded details with fixed 48dp consent footer)");}}

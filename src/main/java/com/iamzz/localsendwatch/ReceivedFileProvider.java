@@ -1,0 +1,11 @@
+package com.iamzz.localsendwatch;
+import android.content.*;import android.database.*;import android.net.*;import android.os.*;import android.provider.OpenableColumns;import android.webkit.MimeTypeMap;import java.io.*;
+public final class ReceivedFileProvider extends ContentProvider {
+ public boolean onCreate(){return true;}
+ static Uri uri(File f){return new Uri.Builder().scheme("content").authority("com.iamzz.localsendwatch.files").appendPath(f.getName()).build();}
+ File file(Uri u)throws FileNotFoundException{try{if(!"com.iamzz.localsendwatch.files".equals(u.getAuthority())||u.getPathSegments().size()!=1)throw new IOException();String name=u.getLastPathSegment();if(!ReceiverEngine.safeName(name))throw new IOException();File root=ReceiverService.received(getContext()).getCanonicalFile();File f=new File(root,name).getCanonicalFile();if(!root.equals(f.getParentFile())||!f.isFile())throw new IOException();return f;}catch(Exception e){throw new FileNotFoundException("文件不存在");}}
+ public ParcelFileDescriptor openFile(Uri u,String mode)throws FileNotFoundException{if(!"r".equals(mode))throw new FileNotFoundException("只读");return ParcelFileDescriptor.open(file(u),ParcelFileDescriptor.MODE_READ_ONLY);}
+ public String getType(Uri u){String n=u.getLastPathSegment();if(n!=null&&n.toLowerCase().endsWith(".apk"))return "application/vnd.android.package-archive";String ext=MimeTypeMap.getFileExtensionFromUrl(n);String mime=MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext.toLowerCase());return mime==null?"application/octet-stream":mime;}
+ public Cursor query(Uri u,String[] columns,String selection,String[] args,String sort){try{File f=file(u);String[] cols=columns==null?new String[]{OpenableColumns.DISPLAY_NAME,OpenableColumns.SIZE}:columns;MatrixCursor c=new MatrixCursor(cols);Object[] row=new Object[cols.length];for(int i=0;i<cols.length;i++)row[i]=OpenableColumns.DISPLAY_NAME.equals(cols[i])?f.getName():OpenableColumns.SIZE.equals(cols[i])?f.length():null;c.addRow(row);return c;}catch(Exception e){return null;}}
+ public Uri insert(Uri u,ContentValues v){throw new UnsupportedOperationException();}public int delete(Uri u,String s,String[] a){throw new UnsupportedOperationException();}public int update(Uri u,ContentValues v,String s,String[] a){throw new UnsupportedOperationException();}
+}

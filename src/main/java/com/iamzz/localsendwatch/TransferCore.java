@@ -1,0 +1,3 @@
+package com.iamzz.localsendwatch;
+import java.io.*;import java.nio.charset.StandardCharsets;import java.nio.file.*;import java.security.*;import java.util.*;
+public final class TransferCore {   public static boolean constant(String a,String b){if(a==null||b==null||a.length()!=b.length())return false;int x=0;for(int i=0;i<a.length();i++)x|=a.charAt(i)^b.charAt(i);return x==0;} public static String sha256(File f)throws Exception{MessageDigest d=MessageDigest.getInstance("SHA-256");try(InputStream in=new FileInputStream(f)){byte[]b=new byte[65536];int n;while((n=in.read(b))>0)d.update(b,0,n);}StringBuilder s=new StringBuilder();for(byte x:d.digest())s.append(String.format("%02x",x));return s.toString();}}

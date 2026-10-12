@@ -1,0 +1,11 @@
+build/
+dist/
+keystore/
+lib/
+.private/
+*.jks
+*.keystore
+*.idsig
+.DS_Store
+__pycache__/
+scripts/device_ui_test.py
