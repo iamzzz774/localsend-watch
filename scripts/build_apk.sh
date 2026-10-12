@@ -18,7 +18,7 @@ cp "$BUILD/base.apk" "$BUILD/unsigned.apk"
 "$BT/zipalign" -f -p 4 "$BUILD/unsigned.apk" "$BUILD/aligned.apk"
 KEYSTORE=${KEYSTORE:-$ROOT/keystore/localsend-watch-release.jks}
 if [ "${UNSIGNED:-0}" = 1 ]; then
-  cp "$BUILD/aligned.apk" "$ROOT/dist/localsend-watch-1.1.0-unsigned.apk"
+  cp "$BUILD/aligned.apk" "$ROOT/dist/localsend-watch-1.1.1-unsigned.apk"
   exit 0
 fi
 if [ -z "${PASSWORD:-}" ]; then
@@ -30,6 +30,6 @@ if [ -z "${PASSWORD:-}" ]; then
   fi
 fi
 export PASSWORD
-"$BT/apksigner" sign --ks "$KEYSTORE" --ks-pass env:PASSWORD --key-pass env:PASSWORD --v4-signing-enabled false --out "$ROOT/dist/localsend-watch-1.1.0.apk" "$BUILD/aligned.apk"
-"$BT/apksigner" verify --verbose "$ROOT/dist/localsend-watch-1.1.0.apk"
-"$BT/zipalign" -c -p 4 "$ROOT/dist/localsend-watch-1.1.0.apk"
+"$BT/apksigner" sign --ks "$KEYSTORE" --ks-pass env:PASSWORD --key-pass env:PASSWORD --v4-signing-enabled false --out "$ROOT/dist/localsend-watch-1.1.1.apk" "$BUILD/aligned.apk"
+"$BT/apksigner" verify --verbose "$ROOT/dist/localsend-watch-1.1.1.apk"
+"$BT/zipalign" -c -p 4 "$ROOT/dist/localsend-watch-1.1.1.apk"

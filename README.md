@@ -1,4 +1,4 @@
-# LocalSend Watch · 1.1.0
+# LocalSend Watch · 1.1.1
 
 适配圆形 Android 手表的 **非官方 LocalSend 兼容接收端**，独立原生 Java 实现公开 LocalSend v2 协议。不是官方发行版，也不是官方应用的 fork。手机继续使用原版 LocalSend。
 
