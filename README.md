@@ -1,6 +1,17 @@
-# LocalSend Watch · 1.1.1
+# LocalSend Watch
 
-适配圆形 Android 手表的 **非官方 LocalSend 兼容接收端**，独立原生 Java 实现公开 LocalSend v2 协议。不是官方发行版，也不是官方应用的 fork。手机继续使用原版 LocalSend。
+
+让圆屏 Android 手表也能接收手机发来的文件。手机继续使用原版 LocalSend，手表通过同一 Wi-Fi 接收文件，并可将收到的 APK 交给系统安装器安装。
+
+**非官方 LocalSend 兼容接收端**，独立原生 Java 实现公开 LocalSend v2 协议，针对圆屏重新设计接收、文件管理和设置界面；不是官方发行版，也不是官方应用的 fork。
+
+## 实机展示
+
+<p align="center">
+  <img src="docs/images/oppo-watch-x3.jpg" alt="OPPO Watch X3 上的 LocalSend Watch 实机主页" width="640">
+</p>
+
+<p align="center">OPPO Watch X3 实机：圆屏主页、启动接收、文件与设置入口。</p>
 
 ## 功能
 
