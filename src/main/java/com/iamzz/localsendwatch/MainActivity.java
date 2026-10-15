@@ -18,13 +18,40 @@ public final class MainActivity extends Activity {
  if(page.equals("home")){panel.addView(text("LocalSend",18));live=text(ReceiverService.running(this)?"接收中":"离线",13);live.setTextColor(Color.parseColor("#80CBC4"));panel.addView(live);panel.addView(text(name()+"\n"+(ReceiverService.running(this)?ReceiverService.addressText:"等待启动"),11));button(ReceiverService.running(this)?"停止接收":"启动接收",panel,v->{if(ReceiverService.running(this)){stopService(new Intent(this,ReceiverService.class));ReceiverService.status="已停止接收";}else{if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},1);try{startForegroundService(new Intent(this,ReceiverService.class));}catch(Exception e){ReceiverService.status="启动失败："+e.getMessage();}}key="";});LinearLayout row=new LinearLayout(this);row.setOrientation(0);panel.addView(row);button("文件",row,v->go("files"));button("设置",row,v->go("settings"));}
  else if(page.equals("files")){panel.addView(text("收到的文件",19));File[] list=ReceiverService.received(this).listFiles();if(list!=null){Arrays.sort(list,(a,b)->Long.compare(b.lastModified(),a.lastModified()));int count=0;for(File f:list)if(f.isFile()&&!f.getName().startsWith(".localsend-")&&count++<100){Button b=button(f.getName()+"\n"+f.length()+" 字节",panel,v->fileActions(f));b.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));b.setPadding(dp(8),dp(10),dp(8),dp(10));b.setMaxLines(3);b.setEllipsize(android.text.TextUtils.TruncateAt.END);}}button("返回",panel,v->go("home"));}
  else if(page.equals("file")||page.equals("delete")){if(selectedFile==null){go("files");return;}boolean deleting=page.equals("delete");panel.addView(text(deleting?"删除文件？":"文件操作",19));TextView filename=text(selectedFile.getName(),14);filename.setMaxLines(2);filename.setEllipsize(android.text.TextUtils.TruncateAt.END);panel.addView(filename);if(deleting){button("确认删除",panel,v->{if(!selectedFile.delete())Toast.makeText(this,"删除失败",0).show();go("files");});button("取消",panel,v->go("file"));}else{button(selectedFile.getName().toLowerCase().endsWith(".apk")?"安装":"打开",panel,v->open(selectedFile));button("导出",panel,v->export(selectedFile));button("删除",panel,v->go("delete"));button("返回",panel,v->go("files"));}}
- else if(page.equals("settings")){panel.addView(text("设置",19));button("设备名称",panel,v->go("edit"));panel.addView(text(name(),14));button("安装授权",panel,v->{try{startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getPackageName())));}catch(Exception e){Toast.makeText(this,"系统无授权入口",0).show();}});panel.addView(text("LocalSend · 1.1.1",14));button("返回",panel,v->go("home"));}
+ else if(page.equals("settings")){panel.addView(text("设置",19));button("设备名称",panel,v->go("edit"));panel.addView(text(name(),14));button("安装授权",panel,v->{try{startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getPackageName())));}catch(Exception e){Toast.makeText(this,"系统无授权入口",0).show();}});panel.addView(text("LocalSend · 1.1.2",14));button("返回",panel,v->go("home"));}
  else if(page.equals("edit")){panel.addView(text("设备名称",19));edit=new EditText(this);edit.setText(name());edit.setTextSize(16);edit.setTextColor(Color.WHITE);edit.setSingleLine(false);edit.setBackground(bg(Color.parseColor("#19332F")));panel.addView(edit,new LinearLayout.LayoutParams(-1,dp(64)));LinearLayout editActions=new LinearLayout(this);editActions.setOrientation(0);panel.addView(editActions);button("保存",editActions,v->{try{String n=WatchUi.name(edit.getText().toString());getSharedPreferences("settings",0).edit().putString("name",n).commit();ReceiverService s=ReceiverService.active;if(s!=null&&s.engine!=null)s.engine.setAlias(n);go("settings");}catch(IllegalArgumentException e){Toast.makeText(this,e.getMessage(),1).show();}});button("取消",editActions,v->go("settings"));}
 
  }
+ private final SwipeBack swipeBack=new SwipeBack();private String swipePage="";
+ @Override public boolean dispatchTouchEvent(MotionEvent event){
+  int action=event.getActionMasked();float density=getResources().getDisplayMetrics().density;
+  float x=event.getX()/density,y=event.getY()/density;long time=event.getEventTime();
+  if(action==MotionEvent.ACTION_DOWN){
+   swipePage=page;
+   // Inside the name editor, preserve cursor/selection drags; use the left edge for Back.
+   swipeBack.begin(x,y,time,!page.equals("edit")||x<=24);
+   return super.dispatchTouchEvent(event);
+  }
+  if(!page.equals(swipePage)){swipeBack.reset();return super.dispatchTouchEvent(event);}
+  boolean wasClaimed=swipeBack.claimed();
+  if(action==MotionEvent.ACTION_CANCEL){swipeBack.reset();return wasClaimed||super.dispatchTouchEvent(event);}
+  if(action==MotionEvent.ACTION_POINTER_DOWN||action==MotionEvent.ACTION_POINTER_UP)swipeBack.abort();
+  if(event.getPointerCount()>1)swipeBack.abort();
+  boolean claimed=swipeBack.move(x,y,time);
+  if(claimed&&!wasClaimed){
+   MotionEvent cancel=MotionEvent.obtain(event);cancel.setAction(MotionEvent.ACTION_CANCEL);
+   super.dispatchTouchEvent(cancel);cancel.recycle();
+  }
+  if(action==MotionEvent.ACTION_UP){
+   boolean back=swipeBack.finish(x,y,time);
+   if(back)onBackPressed();
+   if(claimed)return true;
+  }
+  return claimed||super.dispatchTouchEvent(event);
+ }
  void fileActions(File f){selectedFile=f;go("file");}
  public void onBackPressed(){if(page.equals("home")){super.onBackPressed();return;}if(page.equals("edit")){go("settings");return;}if(page.equals("file")){go("files");return;}if(page.equals("delete")){go("file");return;}if(page.equals("result"))ReceiverService.status="接收中";go("home");}
- public void onResume(){super.onResume();alive=true;handler.removeCallbacks(refresh);handler.post(refresh);}public void onPause(){alive=false;handler.removeCallbacks(refresh);super.onPause();}
+ public void onResume(){super.onResume();alive=true;handler.removeCallbacks(refresh);handler.post(refresh);}public void onPause(){swipeBack.reset();alive=false;handler.removeCallbacks(refresh);super.onPause();}
  void open(File f){try{if(f.getName().toLowerCase().endsWith(".apk")&&!getPackageManager().canRequestPackageInstalls()){Toast.makeText(this,"请允许此应用安装未知应用，再点文件",Toast.LENGTH_LONG).show();startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getPackageName())));return;}Uri u=ReceivedFileProvider.uri(f);Intent i=new Intent(Intent.ACTION_VIEW).setDataAndType(u,getContentResolver().getType(u)).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);startActivity(i);}catch(Exception e){Toast.makeText(this,"此系统没有对应的打开/安装入口",Toast.LENGTH_LONG).show();}}
  void export(File f){exportFile=f;Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("application/octet-stream").addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,f.getName());try{startActivityForResult(i,2);}catch(Exception e){Toast.makeText(this,"手表没有系统文件选择器",Toast.LENGTH_LONG).show();}}
  protected void onActivityResult(int r,int c,Intent data){super.onActivityResult(r,c,data);if(r==2&&c==RESULT_OK&&data!=null&&data.getData()!=null&&exportFile!=null){final Uri uri=data.getData();final File f=exportFile;new Thread(()->{try(InputStream in=new FileInputStream(f);OutputStream out=getContentResolver().openOutputStream(uri)){byte[] b=new byte[65536];int n;while((n=in.read(b))!=-1)out.write(b,0,n);handler.post(()->Toast.makeText(this,"导出完成",0).show());}catch(Exception e){handler.post(()->Toast.makeText(this,"导出失败",0).show());}},"export-file").start();}}

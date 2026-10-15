@@ -9,10 +9,11 @@ if not jar.exists():
 assert hashlib.sha256(jar.read_bytes()).hexdigest()=='3cf6cd6892e32e2b4c1c39e0f52f5248a2f5b37646fdfbb79a66b46b618414ed', 'Host dependency checksum mismatch'
 BUILD=ROOT/'build/host';BUILD.mkdir(parents=True,exist_ok=True)
 java=ROOT/'src/main/java/com/iamzz/localsendwatch'
-sources=[java/(x+'.java') for x in ['WatchUi','TransferCore','TlsIdentity','ReceiverEngine','Discovery']]+list((ROOT/'src/test/java').rglob('*.java'))
+sources=[java/(x+'.java') for x in ['SwipeBack','WatchUi','TransferCore','TlsIdentity','ReceiverEngine','Discovery']]+list((ROOT/'src/test/java').rglob('*.java'))
 subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(ROOT/'lib/json-host.jar'),'-d',str(BUILD)]+[str(s) for s in sources],check=True)
 subprocess.run(['java','-cp',str(BUILD)+':'+str(ROOT/'lib/json-host.jar'),'com.iamzz.localsendwatch.TransferCoreTest'],check=True)
 subprocess.run(['java','-cp',str(BUILD)+':'+str(ROOT/'lib/json-host.jar'),'com.iamzz.localsendwatch.WatchUiTest'],check=True)
+subprocess.run(['java','-cp',str(BUILD)+':'+str(ROOT/'lib/json-host.jar'),'com.iamzz.localsendwatch.SwipeBackTest'],check=True)
 with tempfile.TemporaryDirectory(prefix='localsend-test-',dir=os.environ.get('TMPDIR',ROOT/'build')) as tmp:
  proc=subprocess.Popen(['java','-cp',str(BUILD)+':'+str(ROOT/'lib/json-host.jar'),'com.iamzz.localsendwatch.HostReceiver',tmp],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,bufsize=1)
  output=queue.Queue()
